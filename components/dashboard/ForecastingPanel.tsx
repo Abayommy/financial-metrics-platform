@@ -1,125 +1,159 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, Title, Text, Button, Select, SelectItem, LineChart, Badge } from '@tremor/react';
-import { TrendingUp, Brain, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { Card, Text } from '@tremor/react';
+import { TrendingUp } from 'lucide-react';
+
+interface ForecastDataPoint {
+  month: string;
+  actual: number;
+  forecast: number;
+}
+
+interface ForecastResult {
+  model: string;
+  data: ForecastDataPoint[];
+}
 
 export default function ForecastingPanel() {
-  const [selectedMetric, setSelectedMetric] = useState('revenue');
-  const [forecastPeriod, setForecastPeriod] = useState('3');
-  const [generating, setGenerating] = useState(false);
-  const [forecast, setForecast] = useState<any>(null);
+  const [selectedMetric, setSelectedMetric] = useState<string>('Revenue');
+  const [forecastPeriod, setForecastPeriod] = useState<number>(3);
+  const [forecast, setForecast] = useState<ForecastResult | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateForecast = () => {
-    setGenerating(true);
+  const metrics = [
+    { value: 'Revenue', label: 'Revenue' },
+    { value: 'Expenses', label: 'Expenses' },
+    { value: 'Net Income', label: 'Net Income' },
+    { value: 'Cash Flow', label: 'Cash Flow' },
+    { value: 'EBITDA', label: 'EBITDA' }
+  ];
+
+  const periods = [
+    { value: 3, label: '3 Months' },
+    { value: 6, label: '6 Months' },
+    { value: 9, label: '9 Months' },
+    { value: 12, label: '12 Months' }
+  ];
+
+  const handleGenerateForecast = () => {
+    setIsGenerating(true);
     
     setTimeout(() => {
-      // Generate forecast data
-      const historicalData = Array.from({ length: 12 }, (_, i) => ({
-        month: new Date(Date.now() - (11 - i) * 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en', { month: 'short' }),
-        actual: Math.floor(Math.random() * 100000) + 400000,
-        type: 'historical'
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const baseValue = 50000;
+      
+      const forecastData: ForecastDataPoint[] = months.slice(0, 12).map((month, idx) => ({
+        month,
+        actual: baseValue + (idx * 2000) + (Math.random() * 5000),
+        forecast: baseValue + (idx * 2500) + (Math.random() * 3000)
       }));
-
-      const forecastData = Array.from({ length: parseInt(forecastPeriod) }, (_, i) => ({
-        month: new Date(Date.now() + (i + 1) * 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en', { month: 'short' }),
-        forecast: Math.floor(Math.random() * 120000) + 450000,
-        lower: Math.floor(Math.random() * 100000) + 400000,
-        upper: Math.floor(Math.random() * 140000) + 500000,
-        type: 'forecast'
-      }));
-
-      const combined = [
-        ...historicalData.map(d => ({ ...d, forecast: d.actual, lower: d.actual, upper: d.actual })),
-        ...forecastData.map(d => ({ ...d, actual: null }))
-      ];
 
       setForecast({
-        data: combined,
-        accuracy: 89.5,
-        confidence: 0.85,
-        model: 'ARIMA + XGBoost Ensemble'
+        model: 'ARIMA × XGBoost Ensemble',
+        data: forecastData
       });
       
-      setGenerating(false);
-    }, 2000);
+      setIsGenerating(false);
+    }, 1500);
   };
 
   return (
-    <Card className="shadow-md">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <Title>ML Forecasting</Title>
-          <Text className="text-sm text-gray-600">AI-powered predictive analytics</Text>
-        </div>
-        <Badge color="violet">
-          <Brain className="h-3 w-3 mr-1" />
-          ML Model Active
-        </Badge>
+    <Card className="mt-6">
+      <div className="mb-4">
+        <Text className="text-lg font-semibold">ML Forecasting</Text>
+        <Text className="text-sm text-gray-600">AI-powered predictive analytics</Text>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <Text className="text-sm font-medium mb-2">Select Metric</Text>
-          <Select value={selectedMetric} onValueChange={setSelectedMetric}>
-            <SelectItem value="revenue">Revenue</SelectItem>
-            <SelectItem value="expenses">Expenses</SelectItem>
-            <SelectItem value="profit">Net Profit</SelectItem>
-            <SelectItem value="cashflow">Cash Flow</SelectItem>
-          </Select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {/* Select Metric */}
+        <div className="space-y-2">
+          <label htmlFor="metric-select" className="block text-sm font-medium text-gray-700">
+            Select Metric
+          </label>
+          <select
+            id="metric-select"
+            value={selectedMetric}
+            onChange={(e) => setSelectedMetric(e.target.value)}
+            className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg 
+                     text-gray-900 text-sm font-medium
+                     hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200
+                     appearance-none cursor-pointer"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%233b82f6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 0.75rem center',
+              backgroundSize: '1.25rem',
+              paddingRight: '2.5rem'
+            }}
+          >
+            {metrics.map((metric) => (
+              <option key={metric.value} value={metric.value}>
+                {metric.label}
+              </option>
+            ))}
+          </select>
         </div>
-        <div>
-          <Text className="text-sm font-medium mb-2">Forecast Period</Text>
-          <Select value={forecastPeriod} onValueChange={setForecastPeriod}>
-            <SelectItem value="1">1 Month</SelectItem>
-            <SelectItem value="3">3 Months</SelectItem>
-            <SelectItem value="6">6 Months</SelectItem>
-            <SelectItem value="12">12 Months</SelectItem>
-          </Select>
+
+        {/* Forecast Period */}
+        <div className="space-y-2">
+          <label htmlFor="period-select" className="block text-sm font-medium text-gray-700">
+            Forecast Period
+          </label>
+          <select
+            id="period-select"
+            value={forecastPeriod}
+            onChange={(e) => setForecastPeriod(Number(e.target.value))}
+            className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg 
+                     text-gray-900 text-sm font-medium
+                     hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200
+                     appearance-none cursor-pointer"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%233b82f6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 0.75rem center',
+              backgroundSize: '1.25rem',
+              paddingRight: '2.5rem'
+            }}
+          >
+            {periods.map((period) => (
+              <option key={period.value} value={period.value}>
+                {period.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <Button
-        size="sm"
-        variant="primary"
-        icon={TrendingUp}
-        onClick={generateForecast}
-        loading={generating}
+      <button
+        onClick={handleGenerateForecast}
+        disabled={isGenerating}
+        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white 
+                 font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 
+                 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Generate Forecast
-      </Button>
+        <TrendingUp className="h-4 w-4" />
+        {isGenerating ? 'Generating...' : 'Generate Forecast'}
+      </button>
 
       {forecast && (
         <div className="mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <Text className="font-medium">Forecast Results</Text>
-            <div className="flex gap-2">
-              <Badge color="emerald">
-                Accuracy: {forecast.accuracy}%
-              </Badge>
-              <Badge color="blue">
-                Confidence: {(forecast.confidence * 100).toFixed(0)}%
-              </Badge>
-            </div>
+          <Text className="text-base font-semibold mb-2">Forecast Results</Text>
+          <div className="flex items-center gap-4 text-xs mb-4">
+            <span className="text-green-600 font-medium">Accuracy: 89.5%</span>
+            <span className="text-blue-600 font-medium">Confidence: 85%</span>
           </div>
 
-          <LineChart
-            className="h-72"
-            data={forecast.data}
-            index="month"
-            categories={['actual', 'forecast', 'lower', 'upper']}
-            colors={['blue', 'emerald', 'gray', 'gray']}
-            valueFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
-            showLegend={true}
-            showAnimation={true}
-          />
+          <div className="h-64 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
+            <Text className="text-gray-500">Chart visualization placeholder</Text>
+          </div>
 
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
             <Text className="text-sm font-medium text-blue-900">Model Insights</Text>
             <Text className="text-sm text-blue-700 mt-2">
               Based on {forecast.model}, {selectedMetric} is expected to 
               {forecast.data[forecast.data.length - 1].forecast > forecast.data[11].actual ? ' increase' : ' decrease'} by 
-              {' '}{Math.abs(((forecast.data[forecast.data.length - 1].forecast - forecast.data[11].actual) / forecast.data[11].actual * 100).toFixed(1))}% 
+              {' '}{Math.abs((forecast.data[forecast.data.length - 1].forecast - forecast.data[11].actual) / forecast.data[11].actual * 100).toFixed(1)}% 
               over the next {forecastPeriod} months.
             </Text>
           </div>
