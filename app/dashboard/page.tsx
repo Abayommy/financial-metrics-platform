@@ -22,6 +22,7 @@ import StyledRevenueChart from '@/components/charts/StyledRevenueChart';
 import SQLQueryBuilder from '@/components/dashboard/SQLQueryBuilder';
 import RealTimeMetrics from '@/components/dashboard/RealTimeMetrics';
 import ForecastingPanel from '@/components/dashboard/ForecastingPanel';
+import ExportButton from '@/components/dashboard/ExportButton';
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState<FinancialMetrics[]>([]);
@@ -82,17 +83,24 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="p-6 max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Header with Export Button */}
         <div className="mb-8 bg-white rounded-lg p-6 shadow-sm">
           <div className="flex justify-between items-center">
             <div>
               <Title className="text-2xl">Financial Metrics Dashboard</Title>
               <Text className="mt-2">Real-time financial analytics with AI-powered insights</Text>
             </div>
-            <div className="flex gap-2">
-              <Badge color="emerald">Live Data</Badge>
-              <Badge color="violet">ML Enhanced</Badge>
-              <Badge color="blue">{new Date().toLocaleDateString()}</Badge>
+            <div className="flex items-center gap-4">
+              <ExportButton 
+                metrics={metrics} 
+                transactions={transactions} 
+                kpiTargets={kpiTargets} 
+              />
+              <div className="flex gap-2">
+                <Badge color="emerald">Live Data</Badge>
+                <Badge color="violet">ML Enhanced</Badge>
+                <Badge color="blue">{new Date().toLocaleDateString()}</Badge>
+              </div>
             </div>
           </div>
         </div>
