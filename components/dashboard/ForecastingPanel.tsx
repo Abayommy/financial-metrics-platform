@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Card, Text } from '@tremor/react';
 import { TrendingUp } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface ForecastDataPoint {
   month: string;
@@ -43,7 +44,7 @@ export default function ForecastingPanel() {
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const baseValue = 50000;
       
-      const forecastData: ForecastDataPoint[] = months.slice(0, 12).map((month, idx) => ({
+      const forecastData: ForecastDataPoint[] = months.slice(0, forecastPeriod).map((month, idx) => ({
         month,
         actual: baseValue + (idx * 2000) + (Math.random() * 5000),
         forecast: baseValue + (idx * 2500) + (Math.random() * 3000)
@@ -130,7 +131,7 @@ export default function ForecastingPanel() {
         disabled={isGenerating}
         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white 
                  font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 
-                 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         <TrendingUp className="h-4 w-4" />
         {isGenerating ? 'Generating...' : 'Generate Forecast'}
@@ -144,16 +145,60 @@ export default function ForecastingPanel() {
             <span className="text-blue-600 font-medium">Confidence: 85%</span>
           </div>
 
-          <div className="h-64 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
-            <Text className="text-gray-500">Chart visualization placeholder</Text>
+          {/* Recharts Visualization */}
+          <div className="h-80 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-gray-200 p-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={forecast.data}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="#6b7280"
+                  style={{ fontSize: '12px', fontWeight: 500 }}
+                />
+                <YAxis 
+                  stroke="#6b7280"
+                  style={{ fontSize: '12px', fontWeight: 500 }}
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                  formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
+                  labelStyle={{ fontWeight: 600, marginBottom: '4px' }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '10px' }}
+                  iconType="circle"
+                />
+                <Bar 
+                  dataKey="actual" 
+                  fill="#3b82f6" 
+                  radius={[8, 8, 0, 0]}
+                  name="Actual"
+                />
+                <Bar 
+                  dataKey="forecast" 
+                  fill="#10b981" 
+                  radius={[8, 8, 0, 0]}
+                  name="Forecast"
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
             <Text className="text-sm font-medium text-blue-900">Model Insights</Text>
             <Text className="text-sm text-blue-700 mt-2">
               Based on {forecast.model}, {selectedMetric} is expected to 
-              {forecast.data[forecast.data.length - 1].forecast > forecast.data[11].actual ? ' increase' : ' decrease'} by 
-              {' '}{Math.abs((forecast.data[forecast.data.length - 1].forecast - forecast.data[11].actual) / forecast.data[11].actual * 100).toFixed(1)}% 
+              {forecast.data[forecast.data.length - 1].forecast > forecast.data[0].actual ? ' increase' : ' decrease'} by 
+              {' '}{Math.abs((forecast.data[forecast.data.length - 1].forecast - forecast.data[0].actual) / forecast.data[0].actual * 100).toFixed(1)}% 
               over the next {forecastPeriod} months.
             </Text>
           </div>
